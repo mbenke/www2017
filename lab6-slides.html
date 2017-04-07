@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="http://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="http://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div id="plan" class="slide section level1">
+<h1>Plan</h1>
+<ul>
+<li>Należy zainstalować gunicorna jako alternatywny dla developerskiego sposób serwowania stron https://docs.djangoproject.com/en/1.10/howto/deployment/wsgi/gunicorn/</li>
+<li>Należy zgrać statici do jednego miejsca</li>
+<li>Należy umożliwić upload pliku (np. protokół obwodowy w postaci pdf) dla zalogowanych użytkowników</li>
+<li>Należy zrobić middleware, które będzie logowało wszystkie żądania, które nie mają w parametrach foo=secret</li>
+<li>Należy napisać test jednostkowy sprawdzający sumowanie całkowitej liczby głosów</li>
+</ul>
+</div>
+<div id="gunicorn" class="slide section level1">
+<h1>Gunicorn</h1>
+<p><a href="http://docs.gunicorn.org">docs.gunicorn.org</a></p>
+<blockquote>
+<p>Gunicorn ‘Green Unicorn’ is a Python WSGI HTTP Server for UNIX. It’s a pre-fork worker model ported from Ruby’s Unicorn project.</p>
+</blockquote>
+<p>Instalacja:</p>
+<pre><code>(wow) ➜  pw git:(master) pip install gunicorn
+Collecting gunicorn
+  Downloading gunicorn-19.7.1-py2.py3-none-any.whl (111kB)
+    100% |████████████████████████████████| 112kB 1.6MB/s 
+Installing collected packages: gunicorn
+Successfully installed gunicorn-19.7.1</code></pre>
+<p>Uruchomienie</p>
+<pre><code>(wow) ➜  pw git:(master) ls -l pw/wsgi.py
+-rw-r--r--  1 marcin  staff  379  5 sty 12:41 pw/wsgi.py
+
+(wow) ➜  pw git:(master) gunicorn pw.wsgi -b 0.0.0.0:8000 --workers=2
+[2017-04-05 16:50:49 +0200] [59259] [INFO] Starting gunicorn 19.7.1
+[2017-04-05 16:50:49 +0200] [59259] [INFO] Listening at: http://0.0.0.0:8000 (59259)
+[2017-04-05 16:50:49 +0200] [59259] [INFO] Using worker: sync
+[2017-04-05 16:50:49 +0200] [59262] [INFO] Booting worker with pid: 59262
+[2017-04-05 16:50:49 +0200] [59263] [INFO] Booting worker with pid: 59263</code></pre>
+</div>
+<div id="static" class="slide section level1">
+<h1>Static</h1>
+<pre><code>STATIC_ROOT = &#39;/srv/app/static/&#39;
+STATIC_URL = &#39;/static/&#39;</code></pre>
+<pre><code>./manage.py collectstatic
+cp -a /srv/app/static/* /var/www/static  # mapowane na URL /static/</code></pre>
+<p>Może być na innym serwerze (np nginx reverse proxy), wtedy rsync, Ansible, ...</p>
+</div>
+<div id="upload" class="slide section level1">
+<h1>Upload</h1>
+<ul>
+<li><a href="https://docs.djangoproject.com/en/1.10/topics/http/file-uploads">docs.djangoproject.com/en/1.10/topics/http/file-uploads</a></li>
+<li><a href="https://docs.djangoproject.com/en/1.10/ref/settings/#file-upload-settings">docs.djangoproject.com/en/1.10/ref/settings/#file-upload-settings</a></li>
+</ul>
+<p><code>settings.py</code>:</p>
+<pre><code>MEDIA_ROOT = os.path.join(BASE_DIR, &#39;media&#39;)
+MEDIA_URL = &#39;/media/&#39;</code></pre>
+<p>Form:</p>
+<pre><code>class DocumentForm(forms.Form):
+    docfile = forms.FileField(
+        label=&#39;Select a file&#39;,
+        help_text=&#39;max. XX megabytes&#39;
+    )</code></pre>
+<p>View:</p>
+<pre><code>def list(request):
+    # Handle file upload
+    if request.method == &#39;POST&#39;:
+        form = DocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            newdoc = Document(docfile = request.FILES[&#39;docfile&#39;])
+            newdoc.save()
+
+            # Redirect to the document list after POST
+            return HttpResponseRedirect(reverse(&#39;myapp.views.list&#39;))
+    else:
+        form = DocumentForm() # An empty, unbound form
+
+    # Load documents for the list page
+    documents = Document.objects.all()
+
+    # Render list page with the documents and the form
+    return render_to_response(
+        &#39;myapp/list.html&#39;,
+        {&#39;documents&#39;: documents, &#39;form&#39;: form},
+        context_instance=RequestContext(request)
+    )</code></pre>
+<p><code>MEDIA_ROOT</code> nie jest domyślnie udostępniony, musimy to jakoś oprogramować.</p>
+<p>Na etapie programowania można</p>
+<pre><code>urlpatterns = patterns(&#39;&#39;,
+    (r&#39;^&#39;, include(&#39;myapp.urls&#39;)),
+) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)</code></pre>
+<p>w produkcji to potencjalna luka bezpieczeństwa.</p>
+</div>
+<div id="middleware" class="slide section level1">
+<h1>Middleware</h1>
+<p>Django 1.9 (od 1.10 nowy system, ale stary też działa)</p>
+<p><a href="https://docs.djangoproject.com/en/1.9/topics/http/middleware/#writing-your-own-middleware">docs.djangoproject.com/en/1.9/topics/http/middleware/#writing-your-own-middleware</a></p>
+<p><code>settings.py</code>:</p>
+<pre><code>MIDDLEWARE_CLASSES = (
+myapp.middleware.MyMiddlewareClass,
+...</code></pre>
+<p><code>myapp/middleware.py</code>:</p>
+<pre><code>class AuditMiddleware(object):
+    def process_response(self, request, response):
+        try:
+            if not settings.AUDIT_REQUESTS:
+                return response
+            if not settings.AUDIT_GET_REQUESTS and request.method == &#39;GET&#39;:
+                return response
+
+            if request.user and request.user.id:
+                r = Request()
+                r.fill_from_request(request, response)
+                r.save()
+
+        except AttributeError:
+            # in some corner cases request.user may not be present
+            # also safeguard against missing settings
+            pass
+
+        return response</code></pre>
+<p><a href="https://docs.djangoproject.com/en/1.10/topics/http/middleware/#writing-your-own-middleware">docs.djangoproject.com/en/1.10/topics/http/middleware/#writing-your-own-middleware</a></p>
+</div>
+<div id="testy" class="slide section level1">
+<h1>Testy</h1>
+<pre><code>from django.test import TestCase
+from myapp.models import Animal
+
+class AnimalTestCase(TestCase):
+    def setUp(self):
+        Animal.objects.create(name=&quot;lion&quot;, sound=&quot;roar&quot;)
+        Animal.objects.create(name=&quot;cat&quot;, sound=&quot;meow&quot;)
+
+    def test_animals_can_speak(self):
+        &quot;&quot;&quot;Animals that can speak are correctly identified&quot;&quot;&quot;
+        lion = Animal.objects.get(name=&quot;lion&quot;)
+        cat = Animal.objects.get(name=&quot;cat&quot;)
+        self.assertEqual(lion.speak(), &#39;The lion says &quot;roar&quot;&#39;)
+        self.assertEqual(cat.speak(), &#39;The cat says &quot;meow&quot;&#39;)</code></pre>
+</div>
+<div id="liczenie-głosów" class="slide section level1">
+<h1>Liczenie głosów</h1>
+<pre><code>    def test_simple_ref_results(self):
+        cls = self.__class__
+        self.call_view()
+
+        results = LocalReferendumResult.objects.filter(
+            question=cls.question, territorial_unit=cls.comm)
+        if results:
+            results = results[0]
+            self.assertEqual(results.valid_votes, 16)
+            self.assertEqual(results.valid_votes_no, 6)
+            self.assertEqual(results.valid_votes_yes, 10)
+            self.assertEqual(results.passed, True)
+
+    def call_view(self):
+        response = self.client.\
+            get(resolve_url(&#39;ref_close&#39;, ResultsTest.ref_round.id,
+                            ResultsTest.question.id, self.comm.id), follow=True)
+        self.assertRedirects(response, resolve_url(&#39;ref_results&#39;, ResultsTest.ref_round.id))
+
+        self.context = response.context</code></pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="http://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="http://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div id="zaliczeniowe-zadanie-laboratoryjne-3" class="slide section level1">
+<h1>Zaliczeniowe Zadanie Laboratoryjne 3</h1>
+<ul>
+<li>Należy zmodernizować wyniki zadania drugiego przerabiając serwer na RESTowy.</li>
+<li>Klient powinien być statycznym HTML + CSS + JS (może być serwowany przez django)</li>
+<li>Po załadowaniu HTML, klient powinien rozpocząć pobieranie danych z serwera. Do momentu pobrania danych klient powinien wyświetlać informacje pobrane w poprzedniej sesji przechowywane po stronie przeglądarki</li>
+<li>Klient powinien komunikować się z serwisem RESTowym</li>
+<li>Komunikacja powinna odbywać się przy wykorzystaniu JSONa</li>
+<li>Należy obsługiwać błędy po obu stronach</li>
+<li>Można wykorzystać dodatkową bibliotekę JS</li>
+<li>Trzeba obsłużyć odczyt i edycję (GET/POST)</li>
+</ul>
+</div>
+<div id="laboratorium-9" class="slide section level1">
+<h1>Laboratorium 9</h1>
+<ul>
+<li>XmlHttpRequest</li>
+<li>Ajax i CSRF</li>
+<li>LocalStorage</li>
+</ul>
+</div>
+<div id="httpbin.org" class="slide section level1">
+<h1>httpbin.org</h1>
+<p>Np.</p>
+<pre><code>$ curl http://httpbin.org/ip
+{
+  &quot;origin&quot;: &quot;193.0.96.15&quot;
+}</code></pre>
+<pre><code>$ curl http://httpbin.org/get\?key\=value 
+{
+  &quot;args&quot;: {
+    &quot;key&quot;: &quot;value&quot;
+  }, 
+  &quot;headers&quot;: {
+    &quot;Accept&quot;: &quot;*/*&quot;, 
+    &quot;Connection&quot;: &quot;close&quot;, 
+    &quot;Host&quot;: &quot;httpbin.org&quot;, 
+    &quot;User-Agent&quot;: &quot;curl/7.43.0&quot;
+  }, 
+  &quot;origin&quot;: &quot;193.0.96.15&quot;, 
+  &quot;url&quot;: &quot;http://httpbin.org/get?key=value&quot;
+}
+</code></pre>
+</div>
+<div id="modyfikacja-dokumentu-przez-jquery" class="slide section level1">
+<h1>Modyfikacja dokumentu przez jQuery</h1>
+<pre><code>&lt;!doctype html&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;html&gt;
+&lt;body&gt;
+&lt;h1&gt;h1&lt;/h1&gt;
+&lt;/body&gt;
+&lt;script type=&quot;text/javascript&quot; charset=&quot;utf8&quot;
+src=&quot;https://code.jquery.com/jquery-3.2.1.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;script&gt;
+$(document).ready(function() {
+$(&quot;body h1:first&quot;).text(&#39;welcome&#39;)
+})
+&lt;/script&gt;
+&lt;/html&gt;</code></pre>
+<p><a href="https://learn.jquery.com/">learn.jquery.com</a></p>
+</div>
+<div id="konsola-javascript" class="slide section level1">
+<h1>Konsola JavaScript</h1>
+<pre><code>$(&quot;h1:first&quot;).text(&quot;hello&quot;)</code></pre>
+<pre><code>$.ajax({
+  url: &quot;http://httpbin.org/ip&quot;,
+  success: function( result ) {
+   console.log( result);
+  }
+});</code></pre>
+<p><a href="https://learn.jquery.com/ajax/">learn.jquery.com/ajax/</a></p>
+</div>
+<div id="wskazywanie-elementów" class="slide section level1">
+<h1>Wskazywanie elementów</h1>
+<p>Zamiast <code>document.getElementById('id')</code></p>
+<p>wystarczy <code>$(selektor CSS)</code> np.</p>
+<pre><code>$(&#39;#table1)
+
+$(&#39;.inactive-user&#39;).hide()</code></pre>
+</div>
+<div id="lepsza-identyfikacja" class="slide section level1">
+<h1>Lepsza identyfikacja</h1>
+<pre><code>&lt;!doctype html&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;html&gt;
+&lt;body&gt;
+&lt;h1 id=&quot;h1-1&quot;&gt;h1&lt;/h1&gt;
+&lt;/body&gt;
+&lt;script type=&quot;text/javascript&quot; charset=&quot;utf8&quot;
+src=&quot;https://code.jquery.com/jquery-3.2.1.min.js&quot;&gt;&lt;/script&gt;
+&lt;p id=&quot;ip&quot;&gt;&lt;/p&gt;
+&lt;script&gt;
+$(document).ready(function() {
+$(&quot;#h1-1&quot;).text(&#39;welcome&#39;)
+})
+&lt;/script&gt;
+&lt;/html&gt;</code></pre>
+</div>
+<div id="jeszcze-ajax" class="slide section level1">
+<h1>Jeszcze AJAX</h1>
+<pre><code>$.ajax({ url: &quot;http://httpbin.org/ip&quot; })
+  .done(function(json){ 
+           $(&quot;#ip&quot;).text(json.origin);
+     })
+   .fail(function(xhr, status, error) {
+         alert( &quot;Error!&quot; );
+         console.log( &quot;Error: &quot; + errorThrown );
+         console.log( &quot;Status: &quot; + status );
+         console.dir( xhr );
+     })
+   .always(function( xhr, status ) { alert( &quot;Done.&quot; ); });</code></pre>
+</div>
+<div id="ajax-i-csrf" class="slide section level1">
+<h1>AJAX i CSRF</h1>
+<p><a href="https://docs.djangoproject.com/en/1.11/ref/csrf/#setting-the-token-on-the-ajax-request">Dokumentacja</a></p>
+<p>Używając jQuery, umoieścić w template:</p>
+<pre><code>var csrftoken = $.cookie(&#39;csrftoken&#39;);
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) &amp;&amp; !this.crossDomain) {
+        xhr.setRequestHeader(&quot;X-CSRFToken&quot;, csrftoken);
+        }}});</code></pre>
+</div>
+<div id="localstorage" class="slide section level1">
+<h1>LocalStorage</h1>
+<p><a href="https://developer.mozilla.org/en/docs/Web/API/Window/localStorage">Dokumentacja</a></p>
+<ul>
+<li>odczyt wartości</li>
+</ul>
+<pre><code>localStorage.foo
+localStorage[&#39;foo&#39;]
+localStorage.getItem(&#39;foo&#39;)</code></pre>
+<p>ustawianie wartości</p>
+<pre><code>localStorage.setItem(&#39;foo&#39;, 42);
+localStorage[&#39;foo&#39;] = 42;
+localStorage.foo = 42</code></pre>
+<ul>
+<li>usuwanie</li>
+</ul>
+<pre><code>localStorage.removeItem(&#39;foo&#39;);
+localStorage.clear();</code></pre>
+</div>
+<div id="zdarzenia" class="slide section level1">
+<h1>Zdarzenia</h1>
+<p><a href="https://mdn.github.io/dom-examples/web-storage/">Demo</a></p>
+<pre><code>window.addEventListener(&#39;storage&#39;, function(e) {
+  document.querySelector(&#39;.my-key&#39;).textContent = e.key;
+  document.querySelector(&#39;.my-old&#39;).textContent = e.oldValue;
+  document.querySelector(&#39;.my-new&#39;).textContent = e.newValue;
+  document.querySelector(&#39;.my-url&#39;).textContent = e.url;
+  document.querySelector(&#39;.my-storage&#39;).textContent = e.storageArea;
+});</code></pre>
+</div>
+</body>
+</html>

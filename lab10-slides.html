@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" type="text/css" media="screen, projection, print"
+    href="http://www.w3.org/Talks/Tools/Slidy2/styles/slidy.css" />
+  <script src="http://www.w3.org/Talks/Tools/Slidy2/scripts/slidy.js"
+    charset="utf-8" type="text/javascript"></script>
+</head>
+<body>
+<div id="jshint" class="slide section level1">
+<h1>jshint</h1>
+<p><a href="http://jshint.com">jshint.com</a></p>
+<pre><code>$ npm install -g jshint
+/usr/local/bin/jshint -&gt; /usr/local/lib/node_modules/jshint/bin/jshint
+jshint@2.9.4 /usr/local/lib/node_modules/jshint</code></pre>
+</div>
+<div id="użycie" class="slide section level1">
+<h1>Użycie</h1>
+<pre><code>$ cat foo1.js
+$(document).ready(function() {
+$(&quot;body h1:first&quot;).text(&#39;welcome&#39;)
+})
+$ jshint foo1.js
+foo1.js: line 2, col 35, Missing semicolon.
+foo1.js: line 3, col 3, Missing semicolon.
+
+2 errors
+$ cat foo2.js
+$(document).ready(function() {
+    $(&quot;body h1:first&quot;).text(&#39;welcome&#39;);
+    });
+$ jshint foo2.js</code></pre>
+</div>
+<div id="show-non-errors" class="slide section level1">
+<h1><code>--show-non-errors</code></h1>
+<pre><code>$ jshint --show-non-errors foo2.js
+
+foo2.js :
+    Implied globals:
+            $: 1,2
+            document: 1</code></pre>
+</div>
+<div id="jshintrc" class="slide section level1">
+<h1><code>.jshintrc</code></h1>
+<pre><code>$ emacs .jshintrc
+$ cat .jshintrc
+{
+ &quot;browser&quot;: true,
+  &quot;jquery&quot; : true
+}
+$ jshint --show-non-errors foo2.js
+$ jshint --show-non-errors foo2.js &amp;&amp; echo $?
+  0</code></pre>
+</div>
+<div id="html" class="slide section level1">
+<h1>HTML</h1>
+<pre><code>✗ jshint jquery2.html
+jquery2.html: line 1, col 1, Expected an identifier and instead saw &#39;&lt;&#39;.
+jquery2.html: line 1, col 2, Expected an operator and instead saw &#39;!&#39;.
+jquery2.html: line 1, col 2, Expected an assignment or function call and instead saw an expression.
+jquery2.html: line 1, col 3, Missing semicolon.
+jquery2.html: line 1, col 3, Expected an assignment or function call and instead saw an expression.
+jquery2.html: line 1, col 10, Missing semicolon.
+jquery2.html: line 2, col 1, Expected an identifier and instead saw &#39;&lt;&#39;.
+jquery2.html: line 2, col 1, Unrecoverable syntax error. (13% scanned).
+
+8 errors</code></pre>
+</div>
+<div id="extract" class="slide section level1">
+<h1>--extract</h1>
+<pre><code>$ jshint --extract=auto jquery2.html
+jquery2.html: line 11, col 35, Missing semicolon.
+jquery2.html: line 12, col 3, Missing semicolon.
+
+2 errors
+$ cat jquery2.html
+&lt;!doctype html&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;html&gt;
+&lt;body&gt;
+&lt;h1 id=&quot;h1-1&quot;&gt;h1&lt;/h1&gt;
+&lt;/body&gt;
+&lt;script type=&quot;text/javascript&quot; charset=&quot;utf8&quot; src=&quot;https://code.jquery.com/jquery-3.2.1.min.js&quot;&gt;&lt;/script&gt;
+&lt;p id=&quot;ip&quot;&gt;&lt;/p&gt;
+&lt;script&gt;
+$(document).ready(function() {
+$(&quot;body h1:first&quot;).text(&#39;welcome&#39;)
+})
+&lt;/script&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</body>
+</html>

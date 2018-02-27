@@ -1,0 +1,5 @@
+- model: bids.Bid
+  pk: 1
+  fields:
+    name: Używany kapeć
+    price: 42

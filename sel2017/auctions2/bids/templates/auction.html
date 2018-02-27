@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Aukcja {{bid.name}}</title>
+        <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+        <script src="/static/auction.js"></script>
+    </head>
+    <body>
+        <nav class="navbar navbar-default">
+            <div class="navbar-header">
+                <span class="navbar-brand">
+                    Aukcja "{{bid.name}}"
+                </span>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/">Aukcje</a></li>
+                    <li><a>Menu1</a></li>
+                    <li><a>Menu2</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="container">
+            <div class="jumbotron">
+                <p>
+                    Aktualna cena: <span id="current-price">{{bid.price}}</span>
+                </p>
+                <p>
+                    <input type="number" id="price"> <button id="bid">Podbij cenę</button>
+                </p>
+            </div>
+        </div>
+    </body>
+</html>
